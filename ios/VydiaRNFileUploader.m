@@ -4,7 +4,7 @@
 #import <React/RCTBridgeModule.h>
 #import <Photos/Photos.h>
 
-@interface VydiaRNFileUploader : RCTEventEmitter <RCTBridgeModule, NSURLSessionTaskDelegate>
+@interface VydiaRNFileUploader : RCTEventEmitter <RCTBridgeModule, NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 {
   NSMutableDictionary *_responsesData;
 }
@@ -269,6 +269,8 @@ RCT_EXPORT_METHOD(cancelUpload: (NSString *)cancelUploadId resolve:(RCTPromiseRe
 - (NSURLSession *)urlSession {
     if (_urlSession == nil) {
         NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:BACKGROUND_SESSION_ID];
+      sessionConfiguration.discretionary = NO;
+      sessionConfiguration.sessionSendsLaunchEvents = YES;
         _urlSession = [NSURLSession sessionWithConfiguration:sessionConfiguration delegate:self delegateQueue:nil];
     }
 
@@ -337,6 +339,16 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
     } else {
         [responseData appendData:data];
     }
+}
+
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        id<UIApplicationDelegate> delegate = UIApplication.sharedApplication.delegate;
+        if ([delegate respondsToSelector:@selector(backgroundCompletionHandler)]) {
+            void(^backgroundCompletionHandler)() = [delegate performSelector:@selector(backgroundCompletionHandler) withObject:nil];
+            backgroundCompletionHandler();
+        }
+    });
 }
 
 @end

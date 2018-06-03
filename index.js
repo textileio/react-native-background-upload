@@ -14,17 +14,19 @@ export type StartUploadArgs = {
   url: string,
   path: string,
   // Optional, because raw is default
-  type?: 'raw' | 'multipart',
+  type?: 'raw' | 'multipart' | 'raw-multipart',
   // This option is needed for multipart type
   field?: string,
   customUploadId?: string,
   // parameters are supported only in multipart type
   parameters?: { [string]: string },
   headers?: Object,
-  notification?: NotificationArgs
+  notification?: NotificationArgs,
+  // boundary is supported only in raw-multipart type
+  boundary?: string
 }
 
-const NativeModule = NativeModules.VydiaRNFileUploader || NativeModules.RNFileUploader // iOS is VydiaRNFileUploader and Android is NativeModules 
+const NativeModule = NativeModules.VydiaRNFileUploader || NativeModules.RNFileUploader // iOS is VydiaRNFileUploader and Android is NativeModules
 const eventPrefix = 'RNFileUploader-'
 
 // for IOS, register event listeners or else they don't fire on DeviceEventEmitter
@@ -58,7 +60,7 @@ export const getFileInfo = (path: string): Promise<Object> => {
 }
 
 /*
-Starts uploading a file to an HTTP endpoint.  
+Starts uploading a file to an HTTP endpoint.
 Options object:
 {
   url: string.  url to post to.
@@ -96,7 +98,7 @@ export const cancelUpload = (cancelUploadId: string): Promise<boolean> => {
 }
 
 /*
-Listens for the given event on the given upload ID (resolved from startUpload).  
+Listens for the given event on the given upload ID (resolved from startUpload).
 If you don't supply a value for uploadId, the event will fire for all uploads.
 Events (id is always the upload ID):
   progress - { id: string, progress: int (0-100) }

@@ -150,6 +150,7 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
     NSString *uploadType = options[@"type"] ?: @"raw";
     NSString *fieldName = options[@"field"];
     NSString *customUploadId = options[@"customUploadId"];
+    NSString *boundary = options[@"boundary"] ?: @"boundary";
     NSDictionary *headers = options[@"headers"];
     NSDictionary *parameters = options[@"parameters"];
 
@@ -195,6 +196,14 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
             [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", uuidStr] forHTTPHeaderField:@"Content-Type"];
 
             NSData *httpBody = [self createBodyWithBoundary:uuidStr path:fileURI parameters: parameters fieldName:fieldName];
+            [request setHTTPBody: httpBody];
+
+            // I am sorry about warning, but Upload tasks from NSData are not supported in background sessions.
+            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
+        } else if ([uploadType isEqualToString:@"raw-multipart"]) {
+            [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary] forHTTPHeaderField:@"Content-Type"];
+
+            NSData *httpBody = [self createBodyFromPath:fileURI];
             [request setHTTPBody: httpBody];
 
             // I am sorry about warning, but Upload tasks from NSData are not supported in background sessions.
@@ -264,6 +273,20 @@ RCT_EXPORT_METHOD(cancelUpload: (NSString *)cancelUploadId resolve:(RCTPromiseRe
     [httpBody appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
 
     return httpBody;
+}
+
+- (NSData *)createBodyFromPath:(NSString *)path {
+
+  NSMutableData *httpBody = [NSMutableData data];
+
+  // resolve path
+  NSURL *fileUri = [NSURL URLWithString: path];
+  NSString *pathWithoutProtocol = [fileUri path];
+
+  NSData *data = [[NSFileManager defaultManager] contentsAtPath:pathWithoutProtocol];
+  [httpBody appendData:data];
+
+  return httpBody;
 }
 
 - (NSURLSession *)urlSession {

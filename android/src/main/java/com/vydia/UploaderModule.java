@@ -120,8 +120,8 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      if (!requestType.equals("raw") && !requestType.equals("multipart")) {
-        promise.reject(new IllegalArgumentException("type should be string: raw or multipart."));
+      if (!requestType.equals("raw") && !requestType.equals("multipart") && !requestType.equals("raw-multipart")) {
+        promise.reject(new IllegalArgumentException("type should be string: raw, multipart, or raw-multipart."));
         return;
       }
     }
@@ -179,6 +179,20 @@ public class UploaderModule extends ReactContextBaseJavaModule {
       if (requestType.equals("raw")) {
         request = new BinaryUploadRequest(this.getReactApplicationContext(), customUploadId, url)
                 .setFileToUpload(filePath);
+      } else if (requestType.equals("raw-multipart")) {
+        if (!options.hasKey("boundary")) {
+          promise.reject(new IllegalArgumentException("boundary is required field for raw-multipart type."));
+          return;
+        }
+
+        if (options.getType("boundary") != ReadableType.String) {
+          promise.reject(new IllegalArgumentException("boundary must be string."));
+          return;
+        }
+
+        request = new RawMultipartUploadRequest(this.getReactApplicationContext(), customUploadId, url)
+                .setBoundary(options.getType("boundary"))
+                .setPayload(filePath);
       } else {
         if (!options.hasKey("field")) {
           promise.reject(new IllegalArgumentException("field is required field for multipart type."));
@@ -204,7 +218,7 @@ public class UploaderModule extends ReactContextBaseJavaModule {
       }
 
       if (options.hasKey("parameters")) {
-        if (requestType.equals("raw")) {
+        if (requestType.equals("raw") || requestType.equals("raw-multipart")) {
           promise.reject(new IllegalArgumentException("Parameters supported only in multipart type"));
           return;
         }

@@ -191,7 +191,7 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         }
 
         request = new RawMultipartUploadRequest(this.getReactApplicationContext(), customUploadId, url)
-                .setBoundary(options.getType("boundary"))
+                .setBoundary(options.getString("boundary"))
                 .setPayload(filePath);
       } else {
         if (!options.hasKey("field")) {

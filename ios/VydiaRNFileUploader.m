@@ -205,16 +205,16 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
 
             NSData *httpBody = [self createBodyFromPath:fileURI];
             [request setHTTPBody: httpBody];
-
-            // I am sorry about warning, but Upload tasks from NSData are not supported in background sessions.
             uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
         } else {
             if (parameters.count > 0) {
                 reject(@"RN Uploader", @"Parameters supported only in multipart type", nil);
                 return;
             }
-            
-            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromFile:[NSURL URLWithString: fileURI]];
+
+            NSData *httpBody = [self createBodyFromPath:fileURI];
+            [request setHTTPBody: httpBody];
+            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
         }
 
         uploadTask.taskDescription = customUploadId ? customUploadId : [NSString stringWithFormat:@"%i", thisUploadId];

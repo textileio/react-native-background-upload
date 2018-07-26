@@ -211,10 +211,7 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
                 reject(@"RN Uploader", @"Parameters supported only in multipart type", nil);
                 return;
             }
-
-            NSData *httpBody = [self createBodyFromPath:fileURI];
-            [request setHTTPBody: httpBody];
-            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
+            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromFile:[NSURL fileURLWithPath:fileURI]];
         }
 
         uploadTask.taskDescription = customUploadId ? customUploadId : [NSString stringWithFormat:@"%i", thisUploadId];

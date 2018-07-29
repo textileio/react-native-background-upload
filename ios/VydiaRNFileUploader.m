@@ -228,12 +228,14 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
  * Returns an array of uploadIds known to Apple
  */
 RCT_EXPORT_METHOD(activeUploads:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
-  NSMutableArray *response = [NSMutableArray new];
   [_urlSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
-    NSArray *results = [uploadTasks valueForKey:@"taskDescription"];
-    [response addObjectsFromArray:results];
+    if (uploadTasks) {
+      NSArray *results = [uploadTasks valueForKey:@"taskDescription"];
+      return resolve(results);
+    } else {
+      return resolve(@[]);
+    }
   }];
-  return resolve(response);
 }
 
 /*

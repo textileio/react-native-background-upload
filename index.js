@@ -97,6 +97,10 @@ export const cancelUpload = (cancelUploadId: string): Promise<boolean> => {
   return NativeModule.cancelUpload(cancelUploadId);
 }
 
+export const activeUploads = (): Promise<Array<string>> => {
+  return NativeModule.activeUploads();
+}
+
 /*
 Listens for the given event on the given upload ID (resolved from startUpload).
 If you don't supply a value for uploadId, the event will fire for all uploads.
@@ -114,4 +118,4 @@ export const addListener = (eventType: UploadEvent, uploadId: string, listener: 
   })
 }
 
-export default { startUpload, cancelUpload, addListener, getFileInfo }
+export default { startUpload, cancelUpload, addListener, getFileInfo, activeUploads }

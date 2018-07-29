@@ -279,4 +279,19 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     }
   }
 
+  /*
+   * Cancels file upload
+   * Accepts upload ID as a first argument, this upload will be cancelled
+   * Event "cancelled" will be fired when upload is cancelled.
+   */
+  @ReactMethod
+  public void activeUploads(final Promise promise) {
+    try {
+      promise.resolve(UploadService.getTaskList());
+    } catch (Exception exc) {
+      Log.e(TAG, exc.getMessage(), exc);
+      promise.reject(exc);
+    }
+  }
+
 }

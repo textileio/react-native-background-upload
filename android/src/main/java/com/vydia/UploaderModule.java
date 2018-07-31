@@ -287,7 +287,11 @@ public class UploaderModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void activeUploads(final Promise promise) {
     try {
-      promise.resolve(UploadService.getTaskList());
+      WritableArray taskList = new WritableNativeArray();
+      for (String task : UploadService.getTaskList()) {
+        taskList.pushString(task);
+      }
+      promise.resolve(taskList);
     } catch (Exception exc) {
       Log.e(TAG, exc.getMessage(), exc);
       promise.reject(exc);

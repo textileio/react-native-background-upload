@@ -13,6 +13,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -273,6 +275,25 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     try {
       UploadService.stopUpload(cancelUploadId);
       promise.resolve(true);
+    } catch (Exception exc) {
+      Log.e(TAG, exc.getMessage(), exc);
+      promise.reject(exc);
+    }
+  }
+
+  /*
+   * Cancels file upload
+   * Accepts upload ID as a first argument, this upload will be cancelled
+   * Event "cancelled" will be fired when upload is cancelled.
+   */
+  @ReactMethod
+  public void activeUploads(final Promise promise) {
+    try {
+      WritableArray taskList = new WritableNativeArray();
+      for (String task : UploadService.getTaskList()) {
+        taskList.pushString(task);
+      }
+      promise.resolve(taskList);
     } catch (Exception exc) {
       Log.e(TAG, exc.getMessage(), exc);
       promise.reject(exc);

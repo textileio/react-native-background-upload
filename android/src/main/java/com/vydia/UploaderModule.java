@@ -122,8 +122,8 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      if (!requestType.equals("raw") && !requestType.equals("multipart") && !requestType.equals("raw-multipart")) {
-        promise.reject(new IllegalArgumentException("type should be string: raw, multipart, or raw-multipart."));
+      if (!requestType.equals("raw") && !requestType.equals("multipart")) {
+        promise.reject(new IllegalArgumentException("type should be string: raw, multipart"));
         return;
       }
     }
@@ -152,10 +152,21 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         }
 
         @Override
-        public void onError(Context context, UploadInfo uploadInfo, Exception exception) {
+        public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
           WritableMap params = Arguments.createMap();
           params.putString("id", customUploadId != null ? customUploadId : uploadInfo.getUploadId());
-          params.putString("error", exception.getMessage());
+          if (serverResponse != null) {
+            params.putInt("responseCode", serverResponse.getHttpCode());
+            params.putString("responseBody", serverResponse.getBodyAsString());
+          }
+
+          // Make sure we do not try to call getMessage() on a null object
+          if (exception != null){
+            params.putString("error", exception.getMessage());
+          } else {
+            params.putString("error", "Unknown exception");
+          }
+
           sendEvent("error", params);
         }
 
@@ -181,20 +192,6 @@ public class UploaderModule extends ReactContextBaseJavaModule {
       if (requestType.equals("raw")) {
         request = new BinaryUploadRequest(this.getReactApplicationContext(), customUploadId, url)
                 .setFileToUpload(filePath);
-      } else if (requestType.equals("raw-multipart")) {
-        if (!options.hasKey("boundary")) {
-          promise.reject(new IllegalArgumentException("boundary is required field for raw-multipart type."));
-          return;
-        }
-
-        if (options.getType("boundary") != ReadableType.String) {
-          promise.reject(new IllegalArgumentException("boundary must be string."));
-          return;
-        }
-
-        request = new RawMultipartUploadRequest(this.getReactApplicationContext(), customUploadId, url)
-                .setBoundary(options.getString("boundary"))
-                .setPayload(filePath);
       } else {
         if (!options.hasKey("field")) {
           promise.reject(new IllegalArgumentException("field is required field for multipart type."));
@@ -216,11 +213,55 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         .setDelegate(statusDelegate);
 
       if (notification.getBoolean("enabled")) {
-        request.setNotificationConfig(new UploadNotificationConfig());
+
+        UploadNotificationConfig notificationConfig = new UploadNotificationConfig();
+
+        if (notification.hasKey("notificationChannel")){
+          notificationConfig.setNotificationChannelId(notification.getString("notificationChannel"));
+        }
+
+        if (notification.hasKey("autoClear") && notification.getBoolean("autoClear")){
+          notificationConfig.getCompleted().autoClear = true;
+        }
+
+        if (notification.hasKey("onCompleteTitle")) {
+          notificationConfig.getCompleted().title = notification.getString("onCompleteTitle");
+        }
+
+        if (notification.hasKey("onCompleteMessage")) {
+          notificationConfig.getCompleted().message = notification.getString("onCompleteMessage");
+        }
+
+        if (notification.hasKey("onErrorTitle")) {
+          notificationConfig.getError().title = notification.getString("onErrorTitle");
+        }
+
+        if (notification.hasKey("onErrorMessage")) {
+          notificationConfig.getError().message = notification.getString("onErrorMessage");
+        }
+
+        if (notification.hasKey("onProgressTitle")) {
+          notificationConfig.getProgress().title = notification.getString("onProgressTitle");
+        }
+
+        if (notification.hasKey("onProgressMessage")) {
+          notificationConfig.getProgress().message = notification.getString("onProgressMessage");
+        }
+
+        if (notification.hasKey("onCancelledTitle")) {
+          notificationConfig.getCancelled().title = notification.getString("onCancelledTitle");
+        }
+
+        if (notification.hasKey("onCancelledMessage")) {
+          notificationConfig.getCancelled().message = notification.getString("onCancelledMessage");
+        }
+
+        request.setNotificationConfig(notificationConfig);
+
       }
 
       if (options.hasKey("parameters")) {
-        if (requestType.equals("raw") || requestType.equals("raw-multipart")) {
+        if (requestType.equals("raw")) {
           promise.reject(new IllegalArgumentException("Parameters supported only in multipart type"));
           return;
         }

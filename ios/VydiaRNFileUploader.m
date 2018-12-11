@@ -159,7 +159,7 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
         if (requestUrl == nil) {
             @throw @"Request cannot be nil";
         }
-        
+
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestUrl];
         [request setHTTPMethod: method];
 
@@ -199,12 +199,6 @@ RCT_EXPORT_METHOD(startUpload:(NSDictionary *)options resolve:(RCTPromiseResolve
             [request setHTTPBody: httpBody];
 
             // I am sorry about warning, but Upload tasks from NSData are not supported in background sessions.
-            uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
-        } else if ([uploadType isEqualToString:@"raw-multipart"]) {
-            [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary] forHTTPHeaderField:@"Content-Type"];
-
-            NSData *httpBody = [self createBodyFromPath:fileURI];
-            [request setHTTPBody: httpBody];
             uploadTask = [[self urlSession] uploadTaskWithRequest:request fromData: nil];
         } else {
             if (parameters.count > 0) {

@@ -14,16 +14,14 @@ export type StartUploadArgs = {
   url: string,
   path: string,
   // Optional, because raw is default
-  type?: 'raw' | 'multipart' | 'raw-multipart',
+  type?: 'raw' | 'multipart',
   // This option is needed for multipart type
   field?: string,
   customUploadId?: string,
   // parameters are supported only in multipart type
   parameters?: { [string]: string },
   headers?: Object,
-  notification?: NotificationArgs,
-  // boundary is supported only in raw-multipart type
-  boundary?: string
+  notification?: NotificationArgs
 }
 
 const NativeModule = NativeModules.VydiaRNFileUploader || NativeModules.RNFileUploader // iOS is VydiaRNFileUploader and Android is NativeModules
